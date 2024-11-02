@@ -39,15 +39,15 @@ async def check_login(user: UserLogin):
     conn = None
     try:
         conn = await get_database_connection()
-        query = "SELECT * FROM users WHERE login = $1"
-        row = await conn.fetchrow(query, user.login)
+        query = "SELECT * FROM users WHERE user_email = $1"
+        row = await conn.fetchrow(query, user.email)
 
         if row:
-            to_encode = {"login": user.login, "exp": datetime.utcnow() + EXPIRATION_TIME}
-            token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-            return {"message": "Login exists", "access_token": token}
+            raise HTTPException(status_code=401, detail="Login exists")
         else:
-            raise HTTPException(status_code=401, detail="Incorrect login")
+            to_encode = {"login": user.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
+            token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+            return {"message": "Login available", "access_token": token}
 
     finally:
         if conn:

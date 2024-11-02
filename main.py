@@ -1,6 +1,6 @@
 from asyncio.log import logger
 from typing import Optional
-
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordBearer
 import asyncpg
@@ -28,6 +28,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 async def get_database_connection():
     return await asyncpg.connect(DATABASE_URL)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class UserLogin(BaseModel):
     email: str

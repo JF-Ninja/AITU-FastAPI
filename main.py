@@ -30,12 +30,7 @@ async def get_database_connection():
     return await asyncpg.connect(DATABASE_URL)
 
 class UserLogin(BaseModel):
-    login: str
-    password: str
-    avatar: str
     email: str
-    roll: str
-    gender: str
 
 
 

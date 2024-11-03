@@ -75,15 +75,17 @@ async def check_login(user: check_login):
     conn = None
     try:
         conn = await get_database_connection()
-
         query = "SELECT * FROM users WHERE user_email = $1"
         row = await conn.fetchrow(query, user.email)
 
         if row:
             if pwd_context.verify(user.password, row['password_hash']):
-                return {"message": "Login exists"}
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Incorrect email or password")
+                return {"message": "Login successful", "detail": "Verified"}
+            else:
+                raise HTTPException(status_code=401, detail="Incorrect password")
+        else:
+            raise HTTPException(status_code=401, detail="Incorrect email")
+
     finally:
         if conn:
             await conn.close()

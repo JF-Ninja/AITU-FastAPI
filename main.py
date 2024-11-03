@@ -54,8 +54,7 @@ async def Registration(user: Registration):
         query = "SELECT * FROM users WHERE user_email = $1"
         row = await conn.fetchrow(query, user.email)
         if row:
-
-            return {"success": False, "detail": "Login exists"}
+            raise HTTPException(status_code=401, detail="Login exists")
         else:
             hashed_password = pwd_context.hash(user.password)
             query_insert_user_data = """
@@ -64,7 +63,7 @@ async def Registration(user: Registration):
                     """
             await conn.execute(query_insert_user_data, user.name, user.surname, user.email, hashed_password, user.role,
                                user.gender)
-            return {"success": True, "detail": "user created successfully"}
+            return {"message": "registration successful", "detail": "created new user"}
     finally:
         if conn:
             await conn.close()

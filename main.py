@@ -36,6 +36,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+class check_email(BaseModel):
+    email: str
 class check_login(BaseModel):
     email: str
     password: str
@@ -86,6 +88,26 @@ async def check_login(user: check_login):
                 return {"message": "Login successful", "detail": "Verified"}
             else:
                 raise HTTPException(status_code=401, detail="Incorrect password")
+        else:
+            raise HTTPException(status_code=401, detail="Incorrect email")
+
+    finally:
+        if conn:
+            await conn.close()
+
+
+@app.post("/check_email")
+async def check_email(user: check_email):
+    conn = None
+    try:
+        conn = await get_database_connection()
+        query = "SELECT * FROM users WHERE user_email = $1"
+        row = await conn.fetchrow(query, user.email)
+
+        if row:
+            to_encode = {"login": user.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
+            token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+            return {"message": "Login checked", "detail": "Verified"}
         else:
             raise HTTPException(status_code=401, detail="Incorrect email")
 

@@ -47,7 +47,7 @@ class Registration(BaseModel):
     role: str
     gender: str
 @app.post("/Registration")
-async def check_login(user: Registration):
+async def Registration(user: Registration):
     conn = None
     try:
         conn = await get_database_connection()
@@ -81,7 +81,7 @@ async def check_login(user: check_login):
         if row:
             return {"success": True, "detail": "Verified"}
         else:
-            raise HTTPException(status_code=401, detail="Incorrect login")
+            return {"success": False, "detail": "Incorrect login or password"}
 
     finally:
         if conn:

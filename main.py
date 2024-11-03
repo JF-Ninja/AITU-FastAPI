@@ -95,7 +95,7 @@ async def Registration(user: Registration):
                                user.gender)
             to_encode = {"login": user.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
             token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-            return {"message": "registration successful", "detail": "created new user"}
+            return {"message": "registration successful", "detail": "created new user", "token": token}
     finally:
         if conn:
             await conn.close()
@@ -113,7 +113,7 @@ async def check_login(user: check_login):
             if pwd_context.verify(user.password, row['password_hash']):
                 to_encode = {"login": user.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
                 token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-                return {"message": "Login successful", "detail": "Verified"}
+                return {"message": "Login successful", "detail": "Verified", "token": token}
             else:
                 raise HTTPException(status_code=401, detail="Incorrect password")
         else:
@@ -153,7 +153,7 @@ async def verify_code(request: VerifyRequest):
         raise HTTPException(status_code=400, detail="Incorrect verification code")
     to_encode = {"login": request.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
     token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return {"message": "Verification successful"}
+    return {"message": "Verification successful", "token": token}
 
 @app.post("/change_password")
 async def change_password(request: ChangePassword, token: str = Depends(oauth2_scheme)):

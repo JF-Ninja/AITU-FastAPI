@@ -38,10 +38,13 @@ app.add_middleware(
 )
 
 class UserLogin(BaseModel):
+    name: str
+    surname: str
     email: str
-
-
-
+    password: str
+    avatar: str
+    role: str
+    gender: str
 @app.post("/check_login")
 async def check_login(user: UserLogin):
     conn = None
@@ -51,12 +54,16 @@ async def check_login(user: UserLogin):
         row = await conn.fetchrow(query, user.email)
 
         if row:
-            raise HTTPException(status_code=401, detail="Login exists")
+            return {"success": False, "detail": "Login exists"}
         else:
-            to_encode = {"login": user.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
-            token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-            return {"message": "Login available", "access_token": token}
-
+            hashed_password = pwd_context.hash(user.password)
+            query_insert_user_data = """
+                        INSERT INTO users(user_name, user_surname, user_email, password_hash, user_role, gender)
+                        VALUES($1, $2, $3, $4, $5, $6);
+                    """
+            await conn.execute(query_insert_user_data, user.name, user.surname, user.email, hashed_password, user.role,
+                               user.gender)
+            return {"success": True, "detail": "user created successfully"}
     finally:
         if conn:
             await conn.close()

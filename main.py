@@ -48,22 +48,27 @@ class UserLogin(BaseModel):
 @app.post("/check_login")
 async def check_login(user: UserLogin):
     conn = None
+    print("My fault")
     try:
         conn = await get_database_connection()
+        print("My fault")
         query = "SELECT * FROM users WHERE user_email = $1"
         row = await conn.fetchrow(query, user.email)
-
+        print("My fault1")
         if row:
-            print("My fault")
+
             return {"success": False, "detail": "Login exists"}
         else:
+            print("My fault2")
             hashed_password = pwd_context.hash(user.password)
             query_insert_user_data = """
                         INSERT INTO users(user_name, user_surname, user_email, password_hash, user_role, gender)
                         VALUES($1, $2, $3, $4, $5, $6);
                     """
+            print("My fault3")
             await conn.execute(query_insert_user_data, user.name, user.surname, user.email, hashed_password, user.role,
                                user.gender)
+            print("My fault4")
             return {"success": True, "detail": "user created successfully"}
     finally:
         if conn:

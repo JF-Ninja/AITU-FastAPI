@@ -12,6 +12,7 @@ from passlib.context import CryptContext
 from dotenv import load_dotenv
 import os
 import smtplib
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Dict
 connected_clients: Dict[str, WebSocket] = {}
@@ -39,6 +40,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 class check_email(BaseModel):
     email: str
 class check_login(BaseModel):
@@ -52,22 +55,6 @@ class Registration(BaseModel):
     role: str
     gender: str
 
-
-def send_email(to_email, verification_code):
-    from_email = "your_email@example.com"
-    from_password = "your_password"
-
-    # Создание сообщения
-    msg = MIMEText(f"Ваш код для сброса пароля: {verification_code}")
-    msg['Subject'] = "Код для сброса пароля"
-    msg['From'] = from_email
-    msg['To'] = to_email
-
-    # Отправка сообщения
-    with smtplib.SMTP('smtp.example.com', 587) as server:
-        server.starttls()
-        server.login(from_email, from_password)
-        server.send_message(msg)
 @app.post("/Registration")
 async def Registration(user: Registration):
     conn = None
@@ -116,6 +103,23 @@ async def check_login(user: check_login):
             await conn.close()
 
 
+def send_email(to_email, verification_code):
+    smtp_server = smtplib.SMTP("smtp.gmail.com", 587)
+    smtp_server.starttls()
+    smtp_server.login("eserikova22@gmail.com", "astana16")
+
+    msg = MIMEMultipart()
+    msg["From"] = "eserikova22@gmail.com"
+    msg["To"] = to_email
+    msg["Subject"] = "Код верификации"
+
+    text = f"Ваш код верификации: {verification_code}"
+    msg.attach(MIMEText(text, "plain"))
+
+    smtp_server.sendmail("eserikova22@gmail.com", to_email, msg.as_string())
+    smtp_server.quit()
+
+
 @app.post("/check_email")
 async def check_email(user: check_email):
     conn = None
@@ -125,14 +129,14 @@ async def check_email(user: check_email):
         row = await conn.fetchrow(query, user.email)
 
         if row:
-            verification_code = str(random.randint(1000, 9999))
+            verification_code = random.randint(1000, 9999)
             send_email(user.email, verification_code)
+
             to_encode = {"login": user.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
             token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-            return {"message": "Login checked", "detail": "Verified"}
+            return {"message": "Login checked", "detail": "Verified", "verification_code": verification_code}
         else:
             raise HTTPException(status_code=401, detail="Incorrect email")
-
     finally:
         if conn:
             await conn.close()

@@ -54,6 +54,7 @@ async def check_login(user: UserLogin):
         row = await conn.fetchrow(query, user.email)
 
         if row:
+            print("My fault")
             return {"success": False, "detail": "Login exists"}
         else:
             hashed_password = pwd_context.hash(user.password)

@@ -36,17 +36,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-class UserLogin(BaseModel):
+class check_login(BaseModel):
+    email: str
+    password: str
+class Registration(BaseModel):
     name: str
     surname: str
     email: str
     password: str
-    avatar: Optional[str] = None
     role: str
     gender: str
-@app.post("/check_login")
-async def check_login(user: UserLogin):
+@app.post("/Registration")
+async def check_login(user: Registration):
     conn = None
     try:
         conn = await get_database_connection()
@@ -64,6 +65,24 @@ async def check_login(user: UserLogin):
             await conn.execute(query_insert_user_data, user.name, user.surname, user.email, hashed_password, user.role,
                                user.gender)
             return {"success": True, "detail": "user created successfully"}
+    finally:
+        if conn:
+            await conn.close()
+
+@app.post("/check_login")
+async def check_login(user: check_login):
+    conn = None
+    try:
+        conn = await get_database_connection()
+        hashed_password = pwd_context.hash(user.password)
+        query = "SELECT * FROM users WHERE login = $1 AND password = $2"
+        row = await conn.fetchrow(query, user.login, hashed_password)
+
+        if row:
+            return {"success": True, "detail": "Verified"}
+        else:
+            raise HTTPException(status_code=401, detail="Incorrect login")
+
     finally:
         if conn:
             await conn.close()

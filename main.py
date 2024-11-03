@@ -76,7 +76,7 @@ async def check_login(user: check_login):
         conn = await get_database_connection()
         hashed_password = pwd_context.hash(user.password)
         query = "SELECT * FROM users WHERE login = $1 AND password = $2"
-        row = await conn.fetchrow(query, user.login, hashed_password)
+        row = await conn.fetchrow(query, user.email, hashed_password)
 
         if row:
             return {"success": True, "detail": "Verified"}

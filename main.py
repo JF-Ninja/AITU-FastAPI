@@ -106,17 +106,17 @@ async def check_login(user: check_login):
 def send_email(to_email, verification_code):
     smtp_server = smtplib.SMTP("smtp.gmail.com", 587)
     smtp_server.starttls()
-    smtp_server.login("eserikova22@gmail.com", "astana16")
+    smtp_server.login("aituproject20@gmail.com", "aituproject")
 
     msg = MIMEMultipart()
-    msg["From"] = "eserikova22@gmail.com"
+    msg["From"] = "aituproject20@gmail.com"
     msg["To"] = to_email
     msg["Subject"] = "Код верификации"
 
     text = f"Ваш код верификации: {verification_code}"
     msg.attach(MIMEText(text, "plain"))
 
-    smtp_server.sendmail("eserikova22@gmail.com", to_email, msg.as_string())
+    smtp_server.sendmail("aituproject20@gmail.com", to_email, msg.as_string())
     smtp_server.quit()
 
 

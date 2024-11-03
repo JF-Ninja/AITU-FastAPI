@@ -69,19 +69,23 @@ async def Registration(user: Registration):
         if conn:
             await conn.close()
 
+
 @app.post("/check_login")
 async def check_login(user: check_login):
     conn = None
     try:
         conn = await get_database_connection()
-        hashed_password = pwd_context.hash(user.password)
-        query = "SELECT * FROM users WHERE login = $1 AND password = $2"
-        row = await conn.fetchrow(query, user.email, hashed_password)
+
+        query = "SELECT * FROM users WHERE user_email = $1"
+        row = await conn.fetchrow(query, user.email)
 
         if row:
-            return {"success": True, "detail": "Verified"}
+            if pwd_context.verify(user.password, row['password_hash']):
+                return {"success": True, "detail": "Verified"}
+            else:
+                return {"success": False, "detail": "Incorrect password"}
         else:
-            return {"success": False, "detail": "Incorrect login or password"}
+            return {"success": False, "detail": "Email not found"}
 
     finally:
         if conn:

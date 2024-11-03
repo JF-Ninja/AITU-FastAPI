@@ -42,7 +42,7 @@ class UserLogin(BaseModel):
     surname: str
     email: str
     password: str
-    avatar: str
+    avatar: Optional[str] = None
     role: str
     gender: str
 @app.post("/check_login")

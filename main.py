@@ -63,6 +63,8 @@ async def Registration(user: Registration):
                     """
             await conn.execute(query_insert_user_data, user.name, user.surname, user.email, hashed_password, user.role,
                                user.gender)
+            to_encode = {"login": user.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
+            token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
             return {"message": "registration successful", "detail": "created new user"}
     finally:
         if conn:
@@ -79,6 +81,8 @@ async def check_login(user: check_login):
 
         if row:
             if pwd_context.verify(user.password, row['password_hash']):
+                to_encode = {"login": user.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
+                token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
                 return {"message": "Login successful", "detail": "Verified"}
             else:
                 raise HTTPException(status_code=401, detail="Incorrect password")

@@ -1,4 +1,5 @@
 from asyncio.log import logger
+from random import random
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect
@@ -10,6 +11,8 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 import os
+import smtplib
+from email.mime.text import MIMEText
 from typing import Dict
 connected_clients: Dict[str, WebSocket] = {}
 
@@ -48,6 +51,23 @@ class Registration(BaseModel):
     password: str
     role: str
     gender: str
+
+
+def send_email(to_email, verification_code):
+    from_email = "your_email@example.com"
+    from_password = "your_password"
+
+    # Создание сообщения
+    msg = MIMEText(f"Ваш код для сброса пароля: {verification_code}")
+    msg['Subject'] = "Код для сброса пароля"
+    msg['From'] = from_email
+    msg['To'] = to_email
+
+    # Отправка сообщения
+    with smtplib.SMTP('smtp.example.com', 587) as server:
+        server.starttls()
+        server.login(from_email, from_password)
+        server.send_message(msg)
 @app.post("/Registration")
 async def Registration(user: Registration):
     conn = None
@@ -105,6 +125,8 @@ async def check_email(user: check_email):
         row = await conn.fetchrow(query, user.email)
 
         if row:
+            verification_code = str(random.randint(1000, 9999))
+            send_email(user.email, verification_code)
             to_encode = {"login": user.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
             token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
             return {"message": "Login checked", "detail": "Verified"}

@@ -70,7 +70,7 @@ class Registration(BaseModel):
     password: str
     role: str
     gender: str
-class CodeVerification(BaseModel):
+class VerifyRequest(BaseModel):
     email: str
     verification_code: int
 
@@ -132,6 +132,7 @@ async def check_email(user: check_email):
 
         if row:
             verification_code = random.randint(1000, 9999)
+            verification_codes[user.email] = verification_code
             send_email(user.email, verification_code)
             return {"message": "Login checked", "detail": "Verified", "verification_code": verification_code}
         else:
@@ -142,17 +143,12 @@ async def check_email(user: check_email):
 
 
 @app.post("/verify_code")
-async def verify_code(data: CodeVerification):
-    stored_code = verification_codes.get(data.email)
+async def verify_code(request: VerifyRequest):
+    stored_code = verification_codes.get(request.email)
     if stored_code is None:
-        raise HTTPException(status_code=404, detail="Email не найден")
+        raise HTTPException(status_code=404, detail="Verification code not found for this email")
+    if stored_code != request.verification_code:
+        raise HTTPException(status_code=400, detail="Incorrect verification code")
 
-    if stored_code != data.verification_code:
-        raise HTTPException(status_code=400, detail="Неправильный код")
-
-    to_encode = {"login": data.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
-    token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-    del verification_codes[data.email]
-
-    return {"message": "Код подтвержден", "token": token}
+    # Успешное подтверждение
+    return {"message": "Verification successful"}

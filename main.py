@@ -81,12 +81,9 @@ async def check_login(user: check_login):
 
         if row:
             if pwd_context.verify(user.password, row['password_hash']):
-                return {"success": True, "detail": "Verified"}
-            else:
-                return {"success": False, "detail": "Incorrect password"}
-        else:
-            return {"success": False, "detail": "Email not found"}
-
+                return {"message": "Login exists"}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Incorrect email or password")
     finally:
         if conn:
             await conn.close()

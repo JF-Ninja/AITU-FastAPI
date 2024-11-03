@@ -74,6 +74,7 @@ class VerifyRequest(BaseModel):
     email: str
     verification_code: int
 class ChangePassword(BaseModel):
+    email: str
     new_password: str
 
 @app.post("/Registration")
@@ -151,28 +152,21 @@ async def verify_code(request: VerifyRequest):
         raise HTTPException(status_code=404, detail="Verification code not found for this email")
     if stored_code != request.verification_code:
         raise HTTPException(status_code=400, detail="Incorrect verification code")
-    to_encode = {"login": request.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
-    token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return {"message": "Verification successful", "token": token}
+    return {"message": "Verification successful"}
 
 @app.post("/change_password")
-async def change_password(request: ChangePassword, token: str = Depends(oauth2_scheme)):
+async def change_password(request: ChangePassword):
     conn = None
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("login")
-
-        if not email:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
         conn = await get_database_connection()
-
         hashed_password = pwd_context.hash(request.new_password)
 
         query_update_password = """UPDATE users SET password_hash = $1 WHERE user_email = $2;"""
-        row = await conn.execute(query_update_password, hashed_password, email)
+        await conn.execute(query_update_password, hashed_password, request.email)
+        to_encode = {"login": request.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
 
-        return {"message": "Password updated successfully"}
+        token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        return {"message": "Password updated successfully", "token": token}
     finally:
         if conn:
             await conn.close()

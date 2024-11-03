@@ -40,7 +40,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+verification_codes = {}
 
+def send_email(to_email, verification_code):
+    smtp_server = smtplib.SMTP("smtp.gmail.com", 587)
+    smtp_server.starttls()
+    smtp_server.login("eserikova22@gmail.com", "zokthaldgnrnfjtw")
+
+    msg = MIMEMultipart()
+    msg["From"] = "eserikova22@gmail.com"
+    msg["To"] = to_email
+    msg["Subject"] = "Код верификации"
+
+    text = f"Ваш код верификации: {verification_code}"
+    msg.attach(MIMEText(text, "plain"))
+
+    smtp_server.sendmail("eserikova22@gmail.com", to_email, msg.as_string())
+    smtp_server.quit()
 
 class check_email(BaseModel):
     email: str
@@ -54,6 +70,9 @@ class Registration(BaseModel):
     password: str
     role: str
     gender: str
+class CodeVerification(BaseModel):
+    email: str
+    verification_code: int
 
 @app.post("/Registration")
 async def Registration(user: Registration):
@@ -103,23 +122,6 @@ async def check_login(user: check_login):
             await conn.close()
 
 
-def send_email(to_email, verification_code):
-    smtp_server = smtplib.SMTP("smtp.gmail.com", 587)
-    smtp_server.starttls()
-    smtp_server.login("eserikova22@gmail.com", "zokthaldgnrnfjtw")
-
-    msg = MIMEMultipart()
-    msg["From"] = "eserikova22@gmail.com"
-    msg["To"] = to_email
-    msg["Subject"] = "Код верификации"
-
-    text = f"Ваш код верификации: {verification_code}"
-    msg.attach(MIMEText(text, "plain"))
-
-    smtp_server.sendmail("eserikova22@gmail.com", to_email, msg.as_string())
-    smtp_server.quit()
-
-
 @app.post("/check_email")
 async def check_email(user: check_email):
     conn = None
@@ -131,12 +133,26 @@ async def check_email(user: check_email):
         if row:
             verification_code = random.randint(1000, 9999)
             send_email(user.email, verification_code)
-
-            to_encode = {"login": user.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
-            token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
             return {"message": "Login checked", "detail": "Verified", "verification_code": verification_code}
         else:
             raise HTTPException(status_code=401, detail="Incorrect email")
     finally:
         if conn:
             await conn.close()
+
+
+@app.post("/verify_code")
+async def verify_code(data: CodeVerification):
+    stored_code = verification_codes.get(data.email)
+    if stored_code is None:
+        raise HTTPException(status_code=404, detail="Email не найден")
+
+    if stored_code != data.verification_code:
+        raise HTTPException(status_code=400, detail="Неправильный код")
+
+    to_encode = {"login": data.email, "exp": datetime.utcnow() + EXPIRATION_TIME}
+    token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    del verification_codes[data.email]
+
+    return {"message": "Код подтвержден", "token": token}

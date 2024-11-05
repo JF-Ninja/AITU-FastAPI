@@ -77,6 +77,9 @@ class ChangePassword(BaseModel):
     email: str
     new_password: str
 
+class NewClass(BaseModel):
+    new_info: str
+
 @app.post("/Registration")
 async def Registration(user: Registration):
     conn = None
@@ -167,6 +170,20 @@ async def change_password(request: ChangePassword):
 
         token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return {"message": "Password updated successfully", "token": token}
+    finally:
+        if conn:
+            await conn.close()
+
+@app.post("/new_request")
+async def new_request(info: NewClass):
+    conn = None
+    try:
+        conn = await get_database_connection()
+
+        query_update_password = """INSERT INTO some_info(cards)
+            VALUES($1)"""
+        await conn.execute(query_update_password, info.new_info)
+        return {"message": "new info is ok"}
     finally:
         if conn:
             await conn.close()

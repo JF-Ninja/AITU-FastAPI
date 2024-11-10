@@ -228,6 +228,7 @@ async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oa
         query_values = []
 
         if updated_data.firstname and updated_data.firstname != user_data["firstname"]:
+            print("Can't")
             updated_fields.append("user_name = $1")
             query_values.append(updated_data.firstname)
         if updated_data.lastname and updated_data.lastname != user_data["lastname"]:
@@ -245,6 +246,7 @@ async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oa
 
         # Если есть хотя бы одно поле для обновления
         if updated_fields:
+            print("Is ok")
             # Собираем динамически запрос
             set_clause = ", ".join(updated_fields)
             query = f"""

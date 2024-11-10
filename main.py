@@ -237,7 +237,7 @@ async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oa
             updated_fields.append("region = $3")
             query_values.append(updated_data.region)
         if updated_data.role and updated_data.role != user_data["role"]:
-            updated_fields.append("role = $4")
+            updated_fields.append("user_role = $4")
             query_values.append(updated_data.role)
         if updated_data.avatar and updated_data.avatar != user_data.get("avatar"):
             updated_fields.append("avatar = $5")

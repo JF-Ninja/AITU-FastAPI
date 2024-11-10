@@ -79,8 +79,8 @@ class ChangePassword(BaseModel):
 class UpdateUserInfo(BaseModel):
     user_name: Optional[str] = None
     user_surname: Optional[str] = None
+    region: Optional[str] = None
     user_role: Optional[str] = None
-    gender: Optional[str] = None
     profile_image: Optional[str] = None
 
 
@@ -102,7 +102,6 @@ async def get_user_from_token(token: str):
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
-
 @app.post("/Registration")
 async def Registration(user: Registration):
     conn = None
@@ -196,32 +195,48 @@ async def change_password(request: ChangePassword):
     finally:
         if conn:
             await conn.close()
-
-
+@app.get("/get_user_info")
+async def get_user_info(token: str = Depends(oauth2_scheme)):
+    user_data = await get_user_from_token(token)
+    return user_data
 @app.post("/update_user_info")
 async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oauth2_scheme)):
     conn = None
     try:
-        conn = await get_database_connection()
-        user = await get_user_from_token(token)
+        user_data = await get_user_from_token(token)
 
-        # Устанавливаем текущие значения для каждого поля, если оно не передано
-        user_name = updated_data.user_name if updated_data.user_name else user["user_name"]
-        user_surname = updated_data.user_surname if updated_data.user_surname else user["user_surname"]
-        region = updated_data.user_role if updated_data.user_role else user["region"]
-        user_role = updated_data.gender if updated_data.gender else user["user_role"]
-        profile_image = updated_data.profile_image if updated_data.profile_image else user["profile_image"]
+        # Проверка на наличие изменений, если данные не изменены, то обновление не требуется
+        updated_fields = []
+        query_values = []
 
-        # Составляем запрос на обновление данных
-        query = """UPDATE users SET 
-               user_name = $1, 
-               user_surname = $2, 
-               region = $3, 
-               user_role = $4, 
-               profile_image = $5 
-               WHERE user_email = $6"""
+        # Если поле изменилось, добавляем его в список для обновления
+        if updated_data.user_name != user_data["user_name"]:
+            updated_fields.append("user_name = $1")
+            query_values.append(updated_data.user_name)
+        if updated_data.user_surname != user_data["user_surname"]:
+            updated_fields.append("user_surname = $2")
+            query_values.append(updated_data.user_surname)
+        if updated_data.region != user_data["region"]:
+            updated_fields.append("region = $3")
+            query_values.append(updated_data.region)
+        if updated_data.user_role != user_data["user_role"]:
+            updated_fields.append("user_role = $4")
+            query_values.append(updated_data.user_role)
+        if updated_data.profile_image != user_data["profile_image"]:
+            updated_fields.append("profile_image = $5")
+            query_values.append(updated_data.profile_image)
 
-        await conn.execute(query, user_name, user_surname, region, user_role, profile_image, user["user_email"])
+        # Если есть хотя бы одно изменение
+        if updated_fields:
+            query = f"""
+                    UPDATE users
+                    SET {', '.join(updated_fields)}
+                    WHERE user_email = $6
+                """
+            query_values.append(user_data["user_email"])
+
+            # Выполнение запроса на обновление данных
+            await conn.execute(query, *query_values)
 
         return {"message": "User info updated successfully"}
     finally:

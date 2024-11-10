@@ -76,9 +76,32 @@ class VerifyRequest(BaseModel):
 class ChangePassword(BaseModel):
     email: str
     new_password: str
+class UpdateUserInfo(BaseModel):
+    user_name: Optional[str] = None
+    user_surname: Optional[str] = None
+    user_role: Optional[str] = None
+    gender: Optional[str] = None
+    profile_image: Optional[str] = None
 
-class NewClass(BaseModel):
-    new_info: str
+
+async def get_user_from_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_email = payload.get("login")
+        if user_email is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        conn = await get_database_connection()
+        query = "SELECT * FROM users WHERE user_email = $1"
+        user_row = await conn.fetchrow(query, user_email)
+        if user_row is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return user_row
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 @app.post("/Registration")
 async def Registration(user: Registration):
@@ -174,16 +197,33 @@ async def change_password(request: ChangePassword):
         if conn:
             await conn.close()
 
-@app.post("/new_request")
-async def new_request(info: NewClass):
+
+@app.post("/update_user_info")
+async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oauth2_scheme)):
     conn = None
     try:
         conn = await get_database_connection()
+        user = await get_user_from_token(token)
 
-        query_update_password = """INSERT INTO some_info(cards)
-            VALUES($1)"""
-        await conn.execute(query_update_password, info.new_info)
-        return {"message": "new info is ok"}
+        # Устанавливаем текущие значения для каждого поля, если оно не передано
+        user_name = updated_data.user_name if updated_data.user_name else user["user_name"]
+        user_surname = updated_data.user_surname if updated_data.user_surname else user["user_surname"]
+        region = updated_data.user_role if updated_data.user_role else user["region"]
+        user_role = updated_data.gender if updated_data.gender else user["user_role"]
+        profile_image = updated_data.profile_image if updated_data.profile_image else user["profile_image"]
+
+        # Составляем запрос на обновление данных
+        query = """UPDATE users SET 
+               user_name = $1, 
+               user_surname = $2, 
+               region = $3, 
+               user_role = $4, 
+               profile_image = $5 
+               WHERE user_email = $6"""
+
+        await conn.execute(query, user_name, user_surname, region, user_role, profile_image, user["user_email"])
+
+        return {"message": "User info updated successfully"}
     finally:
         if conn:
             await conn.close()

@@ -228,10 +228,10 @@ async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oa
         query_values = []
 
         if updated_data.firstname and updated_data.firstname != user_data["firstname"]:
-            updated_fields.append("firstname = $1")
+            updated_fields.append("user_name = $1")
             query_values.append(updated_data.firstname)
         if updated_data.lastname and updated_data.lastname != user_data["lastname"]:
-            updated_fields.append("lastname = $2")
+            updated_fields.append("user_surname = $2")
             query_values.append(updated_data.lastname)
         if updated_data.region and updated_data.region != user_data["region"]:
             updated_fields.append("region = $3")
@@ -240,7 +240,7 @@ async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oa
             updated_fields.append("user_role = $4")
             query_values.append(updated_data.role)
         if updated_data.avatar and updated_data.avatar != user_data.get("avatar"):
-            updated_fields.append("avatar = $5")
+            updated_fields.append("profile_image = $5")
             query_values.append(updated_data.avatar)
 
         # Если есть хотя бы одно поле для обновления
@@ -258,6 +258,7 @@ async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oa
             await conn.execute(query, *query_values)
 
         return {"message": "User info updated successfully"}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:

@@ -77,11 +77,12 @@ class ChangePassword(BaseModel):
     email: str
     new_password: str
 class UpdateUserInfo(BaseModel):
-    user_name: Optional[str] = None
-    user_surname: Optional[str] = None
+    firstname: Optional[str] = None
+    lastname: Optional[str] = None
+    email: Optional[str] = None
+    avatar: Optional[str] = None
+    role: Optional[str] = None
     region: Optional[str] = None
-    user_role: Optional[str] = None
-    profile_image: Optional[str] = None
 
 
 async def get_user_from_token(token: str):
@@ -238,9 +239,9 @@ async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oa
         if updated_data.role and updated_data.role != user_data["role"]:
             updated_fields.append("user_role = $4")
             query_values.append(updated_data.role)
-        if updated_data.profile_image and updated_data.profile_image != user_data.get("avatar"):
+        if updated_data.avatar and updated_data.avatar != user_data.get("avatar"):
             updated_fields.append("profile_image = $5")
-            query_values.append(updated_data.profile_image)
+            query_values.append(updated_data.avatar)
 
         # Если есть хотя бы одно поле для обновления
         if updated_fields:

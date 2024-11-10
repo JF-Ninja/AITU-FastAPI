@@ -88,6 +88,7 @@ async def get_user_from_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_email = payload.get("login")
+        print(user_email)
         if user_email is None:
             raise HTTPException(status_code=401, detail="Invalid token")
 

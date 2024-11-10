@@ -91,7 +91,6 @@ async def get_user_from_token(token: str):
         if user_email is None:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-        # Подключаемся к базе данных
         conn = await get_database_connection()
         query = """
         SELECT user_name, user_surname, user_email, profile_image, user_role, region 
@@ -102,15 +101,13 @@ async def get_user_from_token(token: str):
         if user_row is None:
             raise HTTPException(status_code=404, detail="User not found")
 
-        # Возвращаем данные в правильной структуре
         return {
             "firstname": user_row["user_name"],
             "lastname": user_row["user_surname"],
             "email": user_row["user_email"],
             "avatar": user_row.get("profile_image", "default-avatar.jpg"),
-            # Если аватарки нет, возвращаем стандартное изображение
             "role": user_row["user_role"],
-            "region": user_row["region"]  # Добавляем регион
+            "region": user_row["region"]
         }
 
     except jwt.ExpiredSignatureError:
@@ -216,46 +213,52 @@ async def change_password(request: ChangePassword):
 async def get_user_info(token: str = Depends(oauth2_scheme)):
     user_data = await get_user_from_token(token)
     return user_data
+
+
 @app.post("/update_user_info")
 async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oauth2_scheme)):
     conn = None
     try:
         user_data = await get_user_from_token(token)
+        conn = await get_database_connection()  # Убедитесь, что соединение инициализировано
 
-        # Проверка на наличие изменений, если данные не изменены, то обновление не требуется
+        # Логика обновления данных
         updated_fields = []
         query_values = []
 
-        # Если поле изменилось, добавляем его в список для обновления
-        if updated_data.user_name != user_data["user_name"]:
+        if updated_data.firstname and updated_data.firstname != user_data["firstname"]:
             updated_fields.append("user_name = $1")
-            query_values.append(updated_data.user_name)
-        if updated_data.user_surname != user_data["user_surname"]:
+            query_values.append(updated_data.firstname)
+        if updated_data.lastname and updated_data.lastname != user_data["lastname"]:
             updated_fields.append("user_surname = $2")
-            query_values.append(updated_data.user_surname)
-        if updated_data.region != user_data["region"]:
+            query_values.append(updated_data.lastname)
+        if updated_data.region and updated_data.region != user_data["region"]:
             updated_fields.append("region = $3")
             query_values.append(updated_data.region)
-        if updated_data.user_role != user_data["user_role"]:
+        if updated_data.role and updated_data.role != user_data["role"]:
             updated_fields.append("user_role = $4")
-            query_values.append(updated_data.user_role)
-        if updated_data.profile_image != user_data["profile_image"]:
+            query_values.append(updated_data.role)
+        if updated_data.profile_image and updated_data.profile_image != user_data.get("avatar"):
             updated_fields.append("profile_image = $5")
             query_values.append(updated_data.profile_image)
 
-        # Если есть хотя бы одно изменение
+        # Если есть хотя бы одно поле для обновления
         if updated_fields:
+            # Собираем динамически запрос
+            set_clause = ", ".join(updated_fields)
             query = f"""
-                    UPDATE users
-                    SET {', '.join(updated_fields)}
-                    WHERE user_email = $6
-                """
-            query_values.append(user_data["user_email"])
+                UPDATE users
+                SET {set_clause}
+                WHERE user_email = ${len(query_values) + 1}
+            """
+            query_values.append(user_data["email"])
 
-            # Выполнение запроса на обновление данных
+            # Выполняем запрос
             await conn.execute(query, *query_values)
 
         return {"message": "User info updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             await conn.close()

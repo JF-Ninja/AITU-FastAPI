@@ -198,6 +198,9 @@ async def change_password(request: ChangePassword):
 @app.get("/get_user_info")
 async def get_user_info(token: str = Depends(oauth2_scheme)):
     user_data = await get_user_from_token(token)
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    email = payload.get("email")
+    print(email)
     return user_data
 @app.post("/update_user_info")
 async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oauth2_scheme)):

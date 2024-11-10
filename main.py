@@ -223,46 +223,38 @@ async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oa
         user_data = await get_user_from_token(token)
         conn = await get_database_connection()  # Убедитесь, что соединение инициализировано
 
-        # Логика обновления данных
-        updated_fields = []
-        query_values = []
+        # Формируем запрос с заранее подготовленными параметрами
+        query = """
+            UPDATE users
+            SET 
+                user_name = $1,
+                user_surname = $2,
+                region = $3,
+                user_role = $4,
+                profile_image = $5,
+                user_email = $6
+            WHERE user_email = $7
+        """
 
-        if updated_data.firstname and updated_data.firstname != user_data["firstname"]:
-            print("Can't")
-            updated_fields.append("user_name = $1")
-            query_values.append(updated_data.firstname)
-        if updated_data.lastname and updated_data.lastname != user_data["lastname"]:
-            updated_fields.append("user_surname = $2")
-            query_values.append(updated_data.lastname)
-        if updated_data.region and updated_data.region != user_data["region"]:
-            updated_fields.append("region = $3")
-            query_values.append(updated_data.region)
-        if updated_data.role and updated_data.role != user_data["role"]:
-            updated_fields.append("user_role = $4")
-            query_values.append(updated_data.role)
-        if updated_data.avatar and updated_data.avatar != user_data.get("avatar"):
-            updated_fields.append("profile_image = $5")
-            query_values.append(updated_data.avatar)
+        # Подготавливаем значения для обновления, если они есть
+        values = [
+            updated_data.firstname if updated_data.firstname else user_data["firstname"],
+            updated_data.lastname if updated_data.lastname else user_data["lastname"],
+            updated_data.region if updated_data.region else user_data["region"],
+            updated_data.role if updated_data.role else user_data["role"],
+            updated_data.avatar if updated_data.avatar else user_data["avatar"],
+            updated_data.email if updated_data.email else user_data["email"],  # Обновление email
+            user_data["email"]  # Старый email для поиска пользователя
+        ]
 
-        # Если есть хотя бы одно поле для обновления
-        if updated_fields:
-            print("Is ok")
-            # Собираем динамически запрос
-            set_clause = ", ".join(updated_fields)
-            query = f"""
-                UPDATE users
-                SET {set_clause}
-                WHERE user_email = ${len(query_values) + 1}
-            """
-            query_values.append(user_data["email"])
-
-            # Выполняем запрос
-            await conn.execute(query, *query_values)
+        # Выполняем запрос с подготовленными значениями
+        await conn.execute(query, *values)
 
         return {"message": "User info updated successfully"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
     finally:
         if conn:
             await conn.close()

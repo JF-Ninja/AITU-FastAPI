@@ -88,21 +88,37 @@ async def get_user_from_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_email = payload.get("login")
-        print(user_email)
         if user_email is None:
             raise HTTPException(status_code=401, detail="Invalid token")
 
+        # Подключаемся к базе данных
         conn = await get_database_connection()
-        query = "SELECT * FROM users WHERE user_email = $1"
+        query = """
+        SELECT user_name, user_surname, user_email, profile_image, user_role, region 
+        FROM users WHERE user_email = $1
+        """
         user_row = await conn.fetchrow(query, user_email)
+
         if user_row is None:
             raise HTTPException(status_code=404, detail="User not found")
 
-        return user_row
+        # Возвращаем данные в правильной структуре
+        return {
+            "firstname": user_row["user_name"],
+            "lastname": user_row["user_surname"],
+            "email": user_row["user_email"],
+            "avatar": user_row.get("profile_image", "default-avatar.jpg"),
+            # Если аватарки нет, возвращаем стандартное изображение
+            "role": user_row["user_role"],
+            "region": user_row["region"]  # Добавляем регион
+        }
+
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
 @app.post("/Registration")
 async def Registration(user: Registration):
     conn = None
@@ -199,9 +215,6 @@ async def change_password(request: ChangePassword):
 @app.get("/get_user_info")
 async def get_user_info(token: str = Depends(oauth2_scheme)):
     user_data = await get_user_from_token(token)
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    email = payload.get("email")
-    print(email)
     return user_data
 @app.post("/update_user_info")
 async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oauth2_scheme)):

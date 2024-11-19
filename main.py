@@ -221,9 +221,8 @@ async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oa
     conn = None
     try:
         user_data = await get_user_from_token(token)
-        conn = await get_database_connection()  # Убедитесь, что соединение инициализировано
+        conn = await get_database_connection()
 
-        # Формируем запрос с заранее подготовленными параметрами
         query = """
             UPDATE users
             SET 
@@ -236,18 +235,16 @@ async def update_user_info(updated_data: UpdateUserInfo, token: str = Depends(oa
             WHERE user_email = $7
         """
 
-        # Подготавливаем значения для обновления, если они есть
         values = [
             updated_data.firstname if updated_data.firstname else user_data["firstname"],
             updated_data.lastname if updated_data.lastname else user_data["lastname"],
             updated_data.region if updated_data.region else user_data["region"],
             updated_data.role if updated_data.role else user_data["role"],
             updated_data.avatar if updated_data.avatar else user_data["avatar"],
-            updated_data.email if updated_data.email else user_data["email"],  # Обновление email
-            user_data["email"]  # Старый email для поиска пользователя
+            updated_data.email if updated_data.email else user_data["email"],
+            user_data["email"]
         ]
 
-        # Выполняем запрос с подготовленными значениями
         await conn.execute(query, *values)
 
         return {"message": "User info updated successfully"}

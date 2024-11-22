@@ -1,26 +1,22 @@
-from fastapi import Depends
 import asyncpg
 import os
 
 class Database:
-    def __init__(self):
-        self._database_url = os.getenv("DATABASE_URL")
-        self._connection = None
+    _pool = None
 
-    async def connect(self):
-        if not self._connection:
-            self._connection = await asyncpg.connect(self._database_url)
-        return self._connection
+    @classmethod
+    async def connect(cls):
+        if not cls._pool:
+            cls._pool = await asyncpg.create_pool(os.getenv("DATABASE_URL"))
+        return cls._pool
 
-    async def close(self):
-        if self._connection:
-            await self._connection.close()
-            self._connection = None
+    @classmethod
+    async def close(cls):
+        if cls._pool:
+            await cls._pool.close()
+            cls._pool = None
 
-async def get_database() -> asyncpg.Connection:
-    db = Database()
-    conn = await db.connect()
-    try:
+async def get_database():
+    pool = await Database.connect()
+    async with pool.acquire() as conn:
         yield conn
-    finally:
-        await db.close()

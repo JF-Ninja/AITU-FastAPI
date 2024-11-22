@@ -1,14 +1,26 @@
-from src.repositories.auth import UserRepository
-from src.services.auth import UserService
-import os
+from fastapi import Depends
 import asyncpg
+import os
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+class Database:
+    def __init__(self):
+        self._database_url = os.getenv("DATABASE_URL")
+        self._connection = None
 
-async def get_database_connection():
-   return await asyncpg.connect(DATABASE_URL)
+    async def connect(self):
+        if not self._connection:
+            self._connection = await asyncpg.connect(self._database_url)
+        return self._connection
 
-async def get_user_service():
-    conn = await get_database_connection()
-    repository = UserRepository(conn)
-    return UserService(repository)
+    async def close(self):
+        if self._connection:
+            await self._connection.close()
+            self._connection = None
+
+async def get_database() -> asyncpg.Connection:
+    db = Database()
+    conn = await db.connect()
+    try:
+        yield conn
+    finally:
+        await db.close()

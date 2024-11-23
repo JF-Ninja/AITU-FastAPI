@@ -1,8 +1,8 @@
 FROM mirror.gcr.io/library/python:3.11
 
-RUN mkdir /src
+RUN mkdir /fastapi_app
 
-WORKDIR /src
+WORKDIR /fastapi_app
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1

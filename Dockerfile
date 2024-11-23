@@ -1,6 +1,6 @@
 FROM mirror.gcr.io/library/python:3.11
 
-RUN mkdir /fastapi_app
+RUN mkdir /src
 
 WORKDIR /src
 

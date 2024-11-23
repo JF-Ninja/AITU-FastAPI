@@ -1,5 +1,5 @@
 from typing import Optional
-from schemas.auth import Registration
+from src.schemas.auth import Registration
 import asyncpg
 
 class UserRepository:

@@ -4,7 +4,7 @@ services:
   app:
     container_name: new_main_app
     build:  ./
-    command: bash -c 'uvicorn app.src.app:app --host 0.0.0.0 --port 8000'
+    command: bash -c 'uvicorn app.src:app --host 0.0.0.0 --port 8000'
     volumes:
       - ./app:/src/app
     ports:

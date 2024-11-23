@@ -1,5 +1,8 @@
 import asyncpg
 import os
+from fastapi import Depends
+from repositories.auth import UserRepository
+from services.auth import UserService
 
 class Database:
     _pool = None
@@ -20,3 +23,6 @@ async def get_database():
     pool = await Database.connect()
     async with pool.acquire() as conn:
         yield conn
+
+async def get_user_service(connection: asyncpg.Connection = Depends(get_database)):
+    return UserService(UserRepository(connection))

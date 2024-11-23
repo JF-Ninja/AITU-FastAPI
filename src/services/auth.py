@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from fastapi import HTTPException
 import jwt
 import os
-from src.schemas.auth import Registration
+from schemas.auth import Registration
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.repositories.auth import UserRepository
-from src.schemas.auth import Registration
-from src.services.auth import UserService
-from src.depends import get_database
+from repositories.auth import UserRepository
+from schemas.auth import Registration
+from services.auth import UserService
+from depends import get_database
 import asyncpg
 
 router = APIRouter(prefix="/registration", tags=["registration"])

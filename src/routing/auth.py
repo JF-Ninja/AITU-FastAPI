@@ -3,7 +3,7 @@ from schemas.auth import Registration, AuthLogin, AuthData, VerifyRequest
 from services.auth import UserService
 from depends import get_user_service
 
-router = APIRouter(prefix="/registration", tags=["registration"])
+router2 = APIRouter(prefix="/registration", tags=["registration"])
 
 
 # Creating new user
@@ -39,7 +39,7 @@ async def check_user(
 
 router = APIRouter(prefix="/recovery", tags=["recovery"])
 
-@router.post("/recovery", description="Recover the user's account")
+@router.post("", description="Recover the user's account")
 async def recover_user(
     user: AuthLogin,
     user_service: UserService = Depends(get_user_service)

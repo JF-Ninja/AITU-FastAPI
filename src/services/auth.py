@@ -55,7 +55,7 @@ class UserService:
         }
         return {"message": "Код восстановления отправлен на email"}
 
-    async def verify_recovery_code(self, user: VerifyRequest):
+    """async def verify_recovery_code(self, user: VerifyRequest):
 
         saved_code_data = self.recovery_codes.get(user.email)
         if not saved_code_data:
@@ -71,4 +71,4 @@ class UserService:
             raise ValueError("Код восстановления истек")
 
         del self.recovery_codes[user.email]
-        return {"message": "Код восстановления действителен"}
+        return {"message": "Код восстановления действителен"}"""

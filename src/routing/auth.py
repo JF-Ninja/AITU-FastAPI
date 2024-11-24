@@ -40,6 +40,8 @@ async def recover_user(
 ):
     try:
         result = await user_service.recover_user(user)
+        print(16)
+        print(result)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

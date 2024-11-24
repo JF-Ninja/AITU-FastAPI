@@ -54,3 +54,21 @@ class UserService:
             "expiration_time": expiration_time
         }
         return {"message": "Код восстановления отправлен на email"}
+
+    async def verify_code(self, user: VerifyRequest):
+
+        saved_code_data = self.recovery_codes.get(user.email)
+        if not saved_code_data:
+            raise ValueError("Запрос на восстановление не найден для этого email")
+
+        saved_code = saved_code_data["verification_code"]
+        expiration_time = saved_code_data["expiration_time"]
+
+        if user.verification_code != saved_code:
+            raise ValueError("Неверный код восстановления")
+        if datetime.utcnow() > expiration_time:
+            del self.recovery_codes[user.email]
+            raise ValueError("Код восстановления истек")
+
+        del self.recovery_codes[user.email]
+        return {"message": "Код восстановления действителен"}

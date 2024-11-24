@@ -47,13 +47,11 @@ class UserService:
 
         verification_code = randint(100000, 999999)
         await self.email_service.send_email(user.email, verification_code)
-        print(2)
         expiration_time = datetime.utcnow() + timedelta(minutes=10)
         self.recovery_codes[user.email] = {
             "verification_code": verification_code,
             "expiration_time": expiration_time
         }
-        print(3)
         return {"message": "Код восстановления отправлен на email"}
 
     async def verify_code(self, user: VerifyRequest):

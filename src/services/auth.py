@@ -4,7 +4,7 @@ from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta
 import os
-from services.auth import UserRepository
+from repositories.auth import UserRepository
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY")

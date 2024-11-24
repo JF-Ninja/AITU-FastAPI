@@ -14,5 +14,4 @@ app.add_middleware(
 
 app.include_router(router)
 app.include_router(router1)
-app.include_router(router2)
 app.include_router(router3)

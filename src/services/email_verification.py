@@ -5,20 +5,26 @@ import os
 
 
 class EmailService:
+    print(9)
     smtp_server = "smtp.gmail.com"
+    print(3)
     port = 587
+    print(2)
     sender_email = os.getenv("SMTP_EMAIL")
+    print(4)
     sender_password = os.getenv("SMTP_PASSWORD")
+    print(5)
 
     @staticmethod
     async def send_email(to_email: str, verification_code: int) -> None:
+        print(214)
         msg = MIMEMultipart()
         msg["From"] = EmailService.sender_email
         msg["To"] = to_email
         msg["Subject"] = "Код верификации"
         text = f"Ваш код верификации: {verification_code}"
         msg.attach(MIMEText(text, "plain"))
-
+        print(12)
         try:
             async with aiosmtplib.SMTP(hostname=EmailService.smtp_server, port=EmailService.port, timeout=10) as smtp:
                 await smtp.connect()

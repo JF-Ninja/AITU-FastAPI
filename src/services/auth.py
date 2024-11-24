@@ -42,16 +42,13 @@ class UserService:
     async def recover_user(self, user: AuthLogin):
 
         existing_user = await self.repository.get_user_by_email(user.email)
-        print(1)
         if not existing_user:
             raise ValueError("Пользователь с таким email не найден")
 
         verification_code = randint(100000, 999999)
-        print(0)
         await self.email_service.send_email(user.email, verification_code)
         print(2)
         expiration_time = datetime.utcnow() + timedelta(minutes=10)
-        print(22)
         self.recovery_codes[user.email] = {
             "verification_code": verification_code,
             "expiration_time": expiration_time

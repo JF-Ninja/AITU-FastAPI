@@ -39,7 +39,7 @@ async def check_user(
 
 router = APIRouter(prefix="/recovery", tags=["recovery"])
 
-@router.post("", description="Recover the user's account")
+@router.post("", description="Восстановить аккаунт пользователя")
 async def recover_user(
     user: AuthLogin,
     user_service: UserService = Depends(UserService)
@@ -50,7 +50,7 @@ async def recover_user(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/verify", description="Verify the recovery code")
+@router.post("/verify", description="Проверить код восстановления")
 async def verify_code(
     user: VerifyRequest,
     user_service: UserService = Depends(UserService)

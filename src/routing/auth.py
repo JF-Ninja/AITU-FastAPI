@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from schemas.auth import Registration, AuthLogin
+from schemas.auth import Registration, AuthLogin, AuthData, VerifyRequest
 from services.auth import UserService
 from depends import get_user_service
 
@@ -19,11 +19,14 @@ async def register_user(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# Check if the user data correct for SignIn
+
 router = APIRouter(prefix="/authorization", tags=["authorization"])
+
+
+# Check if the user data correct for SignIn
 @router.post("", description="Check the user's account")
 async def check_user(
-    user: AuthLogin,
+    user: AuthData,
     user_service: UserService = Depends(get_user_service)
 ):
     try:
@@ -33,3 +36,27 @@ async def check_user(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+
+router = APIRouter(prefix="/recovery", tags=["recovery"])
+
+@router.post("", description="Recover the user's account")
+async def recover_user(
+    user: AuthLogin,
+    user_service: UserService = Depends(UserService)
+):
+    try:
+        result = await user_service.recover_user(user)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/verify", description="Verify the recovery code")
+async def verify_code(
+    user: VerifyRequest,
+    user_service: UserService = Depends(UserService)
+):
+    try:
+        result = await user_service.verify_recovery_code(user)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -8,6 +8,13 @@ class Registration(BaseModel):
     role: str
     gender: str
 
-class AuthLogin(BaseModel):
+class AuthData(BaseModel):
     email: str
     password: str
+
+class AuthLogin(BaseModel):
+    email: str
+
+class VerifyRequest(BaseModel):
+    email: str
+    verification_code: int

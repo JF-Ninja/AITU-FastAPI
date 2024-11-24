@@ -18,9 +18,9 @@ async def register_user(
 
 
 
-router = APIRouter(prefix="/authorization", tags=["authorization"])
+router1 = APIRouter(prefix="/authorization", tags=["authorization"])
 # Check if the user data correct for SignIn
-@router.post("", description="Check the user's account")
+@router1.post("", description="Check the user's account")
 async def check_user(
     user: AuthData,
     user_service: UserService = Depends(get_user_service)
@@ -32,8 +32,8 @@ async def check_user(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-router = APIRouter(prefix="/recovery", tags=["recovery"])
-@router.post("", description="Recover the user's account")
+router2 = APIRouter(prefix="/recovery", tags=["recovery"])
+@router2.post("", description="Recover the user's account")
 async def recover_user(
     user: AuthLogin,
     user_service: UserService = Depends(get_user_service)
@@ -45,8 +45,8 @@ async def recover_user(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-router = APIRouter(prefix="/verify_code", tags=["verify_code"])
-@router.post("", description="Verify the recovery code")
+router3 = APIRouter(prefix="/verify_code", tags=["verify_code"])
+@router3.post("", description="Verify the recovery code")
 async def verify_code(
     user: VerifyRequest,
     user_service: UserService = Depends(get_user_service)

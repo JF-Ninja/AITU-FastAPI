@@ -40,7 +40,6 @@ async def check_user(
 router2 = APIRouter(prefix="/recovery", tags=["recovery"])
 
 @router.post("/recovery", description="Recover the user's account")
-
 async def recover_user(
     user: AuthLogin,
     user_service: UserService = Depends(get_user_service)

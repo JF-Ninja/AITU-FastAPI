@@ -1,4 +1,5 @@
 import aiosmtplib
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
@@ -19,13 +20,11 @@ class EmailService:
         text = f"Ваш код верификации: {verification_code}"
         msg.attach(MIMEText(text, "plain"))
         try:
-            async with aiosmtplib.SMTP(hostname=EmailService.smtp_server, port=EmailService.port, timeout=10) as smtp:
-                print(111)
-                await smtp.connect()
-                print(222)
-                await smtp.login(EmailService.sender_email, EmailService.sender_password)
-                print(333)
-                await smtp.sendmail(EmailService.sender_email, to_email, msg.as_string())
+            with smtplib.SMTP("smtp.gmail.com", 587) as server:
+                server.starttls()  # Убедитесь, что соединение защищено
+                server.login(EmailService.sender_email, EmailService.sender_password)
+                server.sendmail(EmailService.sender_email, to_email, msg.as_string())
+                print("Email sent successfully!")
         except Exception as e:
             print(f"Error sending email: {e}")
 

@@ -39,3 +39,36 @@ class UserService:
 
         return {"message": "SignIn successful", "token": token}
 
+    async def recover_user(self, user: AuthLogin):
+
+        existing_user = await self.repository.get_user_by_email(user.email)
+        if not existing_user:
+            raise ValueError("Пользователь с таким email не найден")
+
+        verification_code = randint(100000, 999999)
+        await self.email_service.send_email(user.email, verification_code)
+        expiration_time = datetime.utcnow() + timedelta(minutes=10)
+
+        self.recovery_codes[user.email] = {
+            "verification_code": verification_code,
+            "expiration_time": expiration_time
+        }
+        return {"message": "Код восстановления отправлен на email"}
+
+    async def verify_code(self, user: VerifyRequest):
+
+        saved_code_data = self.recovery_codes.get(user.email)
+        if not saved_code_data:
+            raise ValueError("Запрос на восстановление не найден для этого email")
+
+        saved_code = saved_code_data["verification_code"]
+        expiration_time = saved_code_data["expiration_time"]
+
+        if user.verification_code != saved_code:
+            raise ValueError("Неверный код восстановления")
+        if datetime.utcnow() > expiration_time:
+            del self.recovery_codes[user.email]
+            raise ValueError("Код восстановления истек")
+
+        del self.recovery_codes[user.email]
+        return {"message": "Код восстановления действителен"}

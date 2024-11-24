@@ -7,3 +7,7 @@ class Registration(BaseModel):
     password: str
     role: str
     gender: str
+
+class AuthLogin(BaseModel):
+    email: str
+    password: str

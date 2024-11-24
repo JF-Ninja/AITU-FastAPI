@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from schemas.auth import Registration
+from schemas.auth import Registration, AuthLogin
 from services.auth import UserService
 from depends import get_user_service
 
@@ -23,7 +23,7 @@ async def register_user(
 router = APIRouter(prefix="/authorization", tags=["authorization"])
 @router.post("", description="Check the user's account")
 async def check_user(
-    user: Registration,
+    user: AuthLogin,
     user_service: UserService = Depends(get_user_service)
 ):
     try:

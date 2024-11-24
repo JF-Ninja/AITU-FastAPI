@@ -1,11 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-
-from repositories.auth import UserRepository
 from schemas.auth import Registration
 from services.auth import UserService
-from depends import get_database, get_user_service
-
-import asyncpg
+from depends import get_user_service
 
 router = APIRouter(prefix="/registration", tags=["registration"])
 
@@ -19,4 +15,5 @@ async def register_user(
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 

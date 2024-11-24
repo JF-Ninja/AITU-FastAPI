@@ -1,6 +1,6 @@
 from passlib.context import CryptContext
 from repositories.auth import UserRepository
-from repositories.token import TokenRepository
+from services.token import TokenRepository
 from schemas.auth import Registration
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -22,3 +22,14 @@ class UserService:
 
         return {"message": "Registration successful", "token": token}
 
+    async def check_user(self, user: Registration):
+        new_user = await self.repository.get_user_by_email(user)
+        if not new_user:
+            raise ValueError("User with this email is not registered")
+
+        if new_user.hashed_password != user.password:
+            raise ValueError("Incorrect password")
+
+        token = self.token_repository.encode_token(user.email)
+
+        return {"message": "SignIn successful", "token": token}

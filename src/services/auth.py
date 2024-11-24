@@ -3,7 +3,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from repositories.auth import UserRepository
 from services.token import TokenRepository
-from services.email_service import EmailService
+from services.email_verification import EmailService
 from schemas.auth import Registration, AuthLogin, AuthData, VerifyRequest
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

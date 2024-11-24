@@ -23,11 +23,11 @@ class UserService:
         return {"message": "Registration successful", "token": token}
 
     async def check_user(self, user: Registration):
-        new_user = await self.repository.get_user_by_email(user)
-        if not new_user:
+        existing_user = await self.repository.get_user_by_email(user.email)
+        if not existing_user:
             raise ValueError("User with this email is not registered")
 
-        if new_user.hashed_password != user.password:
+        if not pwd_context.verify(user.password, existing_user.password_hash):
             raise ValueError("Incorrect password")
 
         token = self.token_repository.encode_token(user.email)

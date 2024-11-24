@@ -37,7 +37,7 @@ async def check_user(
 
 
 
-router2 = APIRouter(prefix="/recovery", tags=["recovery"])
+router = APIRouter(prefix="/recovery", tags=["recovery"])
 
 @router.post("/recovery", description="Recover the user's account")
 async def recover_user(
@@ -53,8 +53,6 @@ async def recover_user(
 
 router3 = APIRouter(prefix="/verify_code", tags=["verify_code"])
 @router.post("", description="Verify the recovery code")
-
-
 async def verify_code(
     user: VerifyRequest,
     user_service: UserService = Depends(get_user_service)

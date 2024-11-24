@@ -3,9 +3,7 @@ from schemas.auth import Registration, AuthLogin, AuthData, VerifyRequest
 from services.auth import UserService
 from depends import get_user_service
 
-router2 = APIRouter(prefix="/registration", tags=["registration"])
-
-
+router = APIRouter(prefix="/registration", tags=["registration"])
 # Creating new user
 @router.post("", description="Register a new user")
 async def register_user(
@@ -20,9 +18,7 @@ async def register_user(
 
 
 
-router1 = APIRouter(prefix="/authorization", tags=["authorization"])
-
-
+router = APIRouter(prefix="/authorization", tags=["authorization"])
 # Check if the user data correct for SignIn
 @router.post("", description="Check the user's account")
 async def check_user(
@@ -36,9 +32,7 @@ async def check_user(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-
 router = APIRouter(prefix="/recovery", tags=["recovery"])
-
 @router.post("", description="Recover the user's account")
 async def recover_user(
     user: AuthLogin,
@@ -51,7 +45,7 @@ async def recover_user(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-router3 = APIRouter(prefix="/verify_code", tags=["verify_code"])
+router = APIRouter(prefix="/verify_code", tags=["verify_code"])
 @router.post("", description="Verify the recovery code")
 async def verify_code(
     user: VerifyRequest,

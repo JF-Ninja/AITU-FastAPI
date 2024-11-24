@@ -50,17 +50,3 @@ async def recover_user(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
-router = APIRouter(prefix="/verify_code", tags=["verify_code"])
-@router.post("", description="Verify the recovery code")
-
-
-async def verify_code(
-    user: VerifyRequest,
-    user_service: UserService = Depends(UserService)
-):
-    try:
-        result = await user_service.verify_recovery_code(user)
-        return result
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))

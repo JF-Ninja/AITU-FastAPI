@@ -22,8 +22,7 @@ class EmailService:
 
         try:
             smtp = aiosmtplib.SMTP(hostname=EmailService.smtp_server, port=EmailService.port)
-            await smtp.connect()
-            await smtp.starttls()
+            await smtp.connect(start_tls=True)
             await smtp.login(EmailService.sender_email, EmailService.sender_password)
             await smtp.sendmail(EmailService.sender_email, to_email, msg.as_string())
             await smtp.quit()

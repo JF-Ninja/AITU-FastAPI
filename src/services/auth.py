@@ -1,6 +1,6 @@
 from random import randint
 from passlib.context import CryptContext
-import aioredis
+from datetime import datetime, timedelta
 from repositories.auth import UserRepository
 from services.token import TokenRepository
 from services.email_verification import EmailService
@@ -12,11 +12,9 @@ recovery_codes = {}
 
 class UserService:
     def __init__(self, repository: UserRepository, token_repository: TokenRepository, email_service: EmailService):
-        self.redis_client = None
         self.repository = repository
         self.token_repository = token_repository
         self.email_service = email_service
-        self.redis_client = self.redis_client
 
     async def register_user(self, user: Registration):
         existing_user = await self.repository.get_user_by_email(user.email)
@@ -43,28 +41,34 @@ class UserService:
         return {"message": "SignIn successful", "token": token}
 
     async def recover_user(self, user: AuthLogin):
+
         existing_user = await self.repository.get_user_by_email(user.email)
         if not existing_user:
             raise ValueError("Пользователь с таким email не найден")
 
         verification_code = randint(100000, 999999)
-
         await self.email_service.send_email(user.email, verification_code)
-
-        expiration_time = 10 * 60
-        await self.redis_client.setex(user.email, expiration_time, verification_code)
-
+        expiration_time = datetime.utcnow() + timedelta(minutes=10)
+        recovery_codes[user.email] = {
+            "verification_code": verification_code,
+            "expiration_time": expiration_time
+        }
         return {"message": "Код восстановления отправлен на email"}
 
     async def verify_code(self, user: VerifyRequest):
 
-        stored_code = await self.redis_client.get(user.email)
-
-        if not stored_code:
+        saved_code_data = recovery_codes.get(user.email)
+        if not saved_code_data:
             raise ValueError("Запрос на восстановление не найден для этого email")
 
-        if int(user.verification_code) != int(stored_code):
-            raise ValueError("Неверный код восстановления")
+        saved_code = saved_code_data["verification_code"]
+        expiration_time = saved_code_data["expiration_time"]
 
-        await self.redis_client.delete(user.email)
+        if user.verification_code != saved_code:
+            raise ValueError("Неверный код восстановления")
+        if datetime.utcnow() > expiration_time:
+            del recovery_codes[user.email]
+            raise ValueError("Код восстановления истек")
+
+        del recovery_codes[user.email]
         return {"message": "Код восстановления действителен"}

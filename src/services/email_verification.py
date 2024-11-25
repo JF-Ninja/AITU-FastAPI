@@ -1,4 +1,4 @@
-import aiosmtplib
+import smtplib
 import asyncio
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -13,21 +13,15 @@ class EmailService:
 
     @staticmethod
     async def send_email(to_email: str, verification_code: int) -> None:
+        smtp_server = smtplib.SMTP("smtp.gmail.com", 587)
+        smtp_server.starttls()
+        smtp_server.login("eserikova22@gmail.com", "zokthaldgnrnfjtw")
         msg = MIMEMultipart()
-        msg["From"] = EmailService.sender_email
+        msg["From"] = "eserikova22@gmail.com"
         msg["To"] = to_email
         msg["Subject"] = "Код верификации"
         text = f"Ваш код верификации: {verification_code}"
         msg.attach(MIMEText(text, "plain"))
-        try:
-            async with aiosmtplib.SMTP(hostname=EmailService.smtp_server, port=EmailService.port, timeout=10) as smtp:
-                print("Connecting...")
-                await smtp.connect()
-                await smtp.starttls()
-                print("Connected to SMTP server")
-                await smtp.login(EmailService.sender_email, EmailService.sender_password)
-                print("Logged in successfully")
-                await smtp.sendmail(EmailService.sender_email, to_email, msg.as_string())
-        except Exception as e:
-            print(f"Error sending email: {e}")
+        smtp_server.sendmail("eserikova22@gmail.com", to_email, msg.as_string())
+        smtp_server.quit()
 

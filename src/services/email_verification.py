@@ -20,10 +20,11 @@ class EmailService:
         text = f"Ваш код верификации: {verification_code}"
         msg.attach(MIMEText(text, "plain"))
         try:
-            with smtplib.SMTP("smtp.gmail.com", 587) as server:
-                server.starttls()  # Убедитесь, что соединение защищено
-                server.login(EmailService.sender_email, EmailService.sender_password)
-                server.sendmail(EmailService.sender_email, to_email, msg.as_string())
+            async with aiosmtplib.SMTP(hostname=EmailService.smtp_server, port=EmailService.port, timeout=10) as smtp:
+                await smtp.connect()
+                await smtp.starttls()
+                await smtp.login(EmailService.sender_email, EmailService.sender_password)
+                await smtp.sendmail(EmailService.sender_email, to_email, msg.as_string())
                 print("Email sent successfully!")
         except Exception as e:
             print(f"Error sending email: {e}")

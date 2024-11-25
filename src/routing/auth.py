@@ -53,7 +53,7 @@ async def verify_code(
     user_service: UserService = Depends(get_user_service)
 ):
     try:
-        result = await user_service.verify_recovery_code(user)
+        result = await user_service.verify_code(user)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

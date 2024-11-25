@@ -1,8 +1,13 @@
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
+import logging
 from models.auth import User
 from schemas.auth import Registration
+
+
+logging.basicConfig(level=logging.WARNING)
+
 
 class UserRepository:
     def __init__(self, db: AsyncSession):
